@@ -1,0 +1,5 @@
+{
+  "demographic_parity": {"threshold": 0.1, "direction": "below"},
+  "equalized_odds": {"threshold": 0.1, "direction": "below"},
+  "calibration": {"threshold": 0.1, "direction": "below"}
+}

@@ -1,0 +1,15 @@
+{
+  "app": {
+    "name": "AEGIS",
+    "version": "2.1.0"
+  },
+  "datasets": {
+    "default": "adult_census",
+    "available": ["adult_census", "compas", "german_credit"]
+  },
+  "ml": {
+    "dag_gnn": {"hidden_dim": 64, "epochs": 100, "threshold": 0.3},
+    "ppo": {"learning_rate": 0.0003, "gamma": 0.99, "epochs": 100},
+    "cvae": {"latent_dim": 16, "epochs": 50, "beta": 0.1}
+  }
+}

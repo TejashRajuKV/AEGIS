@@ -1,0 +1,42 @@
+"""Schema definition for the Adult Census dataset."""
+
+SCHEMA: dict = {
+    "name": "adult_census",
+    "target": "income",
+    "protected_attributes": ["sex", "race"],
+    "required_columns": [
+        "age",
+        "workclass",
+        "fnlwgt",
+        "education",
+        "education_num",
+        "marital_status",
+        "occupation",
+        "relationship",
+        "race",
+        "sex",
+        "capital_gain",
+        "capital_loss",
+        "hours_per_week",
+        "native_country",
+        "income",
+    ],
+    "categorical_columns": [
+        "workclass",
+        "education",
+        "marital_status",
+        "occupation",
+        "relationship",
+        "race",
+        "sex",
+        "native_country",
+    ],
+    "numeric_columns": [
+        "age",
+        "fnlwgt",
+        "education_num",
+        "capital_gain",
+        "capital_loss",
+        "hours_per_week",
+    ],
+}

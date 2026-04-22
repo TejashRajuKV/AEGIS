@@ -1,0 +1,40 @@
+"""Schema definition for the COMPAS Recidivism dataset."""
+
+SCHEMA: dict = {
+    "name": "compas",
+    "target": "recidivism",
+    "protected_attributes": ["race", "sex"],
+    "required_columns": [
+        "age",
+        "age_cat",
+        "sex",
+        "race",
+        "juv_fel_count",
+        "juv_misd_count",
+        "juv_other_count",
+        "priors_count",
+        "c_charge_degree",
+        "c_charge_desc",
+        "is_recid",
+        "r_charge_degree",
+        "r_offense_date",
+        "r_jail_in",
+        "r_jail_out",
+        "recidivism",
+    ],
+    "categorical_columns": [
+        "age_cat",
+        "sex",
+        "race",
+        "c_charge_degree",
+        "r_charge_degree",
+    ],
+    "numeric_columns": [
+        "age",
+        "juv_fel_count",
+        "juv_misd_count",
+        "juv_other_count",
+        "priors_count",
+        "is_recid",
+    ],
+}

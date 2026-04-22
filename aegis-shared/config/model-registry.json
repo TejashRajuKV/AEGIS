@@ -1,0 +1,7 @@
+{
+  "models": [
+    {"name": "logistic_regression", "type": "sklearn", "class": "LogisticRegression"},
+    {"name": "random_forest", "type": "sklearn", "class": "RandomForestClassifier"},
+    {"name": "xgboost", "type": "xgboost", "class": "XGBClassifier"}
+  ]
+}

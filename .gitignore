@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Secrets — NEVER commit real keys
+.env
+*.env
+!.env.example
+
+# IDE / OS
+.idea/
+.vscode/
+*.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs (keep structure, not content)
+logs/*.log
+logs/**/*.log
+
+# PyTorch model weights (can be huge; keep checkpoints dir structure)
+checkpoints/*.pt
+checkpoints/*.pth
+checkpoints/**/*.pt
+checkpoints/**/*.pth
+
+# Uploads (user-uploaded files)
+uploads/*
+!uploads/.gitkeep
+
+# Cache dirs
+cache/*
+!cache/.gitkeep
+
+# NOTE: datasets in aegis-shared/datasets ARE intentionally included
+# so the branch is self-contained and runnable.
