@@ -60,7 +60,7 @@ class TrainRequest(BaseModel):
     model_config = {"protected_namespaces": ()}
 
     dataset_name: str = Field(..., description="Dataset to train on (e.g. 'adult_census')")
-    target_column: str = Field("income", description="Column to predict")
+    target_column: Optional[str] = Field(None, description="Column to predict")
     sensitive_attributes: Optional[List[str]] = Field(
         None, description="Sensitive attribute columns (informational only)"
     )
@@ -112,17 +112,26 @@ async def train_model(model_id: str, body: TrainRequest) -> Dict[str, Any]:
     except Exception as exc:
         raise HTTPException(status_code=404, detail=str(exc))
 
-    if body.target_column not in df.columns:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Target column '{body.target_column}' not found in dataset. "
-                   f"Available columns: {list(df.columns)}",
+    _DATASET_TARGETS = {
+        "compas": "two_year_recid",
+        "adult_census": "income",
+        "german_credit": "credit_risk",
+    }
+    target_column = body.target_column or _DATASET_TARGETS.get(body.dataset_name)
+
+    if not target_column or target_column not in df.columns:
+        available = list(df.columns)
+        detail = (
+            f"target_column is required. Available columns: {available}"
+            if not target_column
+            else f"Target column '{target_column}' not found. Available columns: {available}"
         )
+        raise HTTPException(status_code=422, detail=detail)
 
     # Features: use numeric columns only (safe default)
     feature_cols = [
         c for c in df.columns
-        if c != body.target_column
+        if c != target_column
         and df[c].dtype.kind in "iuf"   # int, unsigned int, float
     ]
     if not feature_cols:
@@ -132,7 +141,7 @@ async def train_model(model_id: str, body: TrainRequest) -> Dict[str, Any]:
         )
 
     X = df[feature_cols].fillna(0).values
-    y = LabelEncoder().fit_transform(df[body.target_column].values)
+    y = LabelEncoder().fit_transform(df[target_column].values)
 
     # Bug 11 fix: compute real test accuracy on a held-out split
     from sklearn.model_selection import train_test_split as _tts
@@ -166,7 +175,7 @@ async def train_model(model_id: str, body: TrainRequest) -> Dict[str, Any]:
         model_type=model_id,
         metadata={
             "dataset_name": body.dataset_name,
-            "target_column": body.target_column,
+            "target_column": target_column,
             "n_samples": len(y),
             "n_train": len(y_train),
             "n_test": len(y_test),
@@ -181,7 +190,7 @@ async def train_model(model_id: str, body: TrainRequest) -> Dict[str, Any]:
         "model_id": model_id_registered,
         "status": "trained",
         "dataset": body.dataset_name,
-        "target_column": body.target_column,
+        "target_column": target_column,
         "n_samples": len(y),
         "n_train": len(y_train),
         "n_test": len(y_test),

@@ -16,7 +16,6 @@ from app.api.routes import (
     health,
     models,
     text_bias,
-    websocket,
 )
 
 api_router.include_router(health.router, prefix="/health", tags=["Health"])
@@ -29,4 +28,3 @@ api_router.include_router(drift.router, prefix="/drift", tags=["Drift"])
 api_router.include_router(counterfactual.router, prefix="/counterfactual", tags=["Counterfactual"])
 api_router.include_router(code_fix.router, prefix="/code-fix", tags=["Code Fix"])
 api_router.include_router(autopilot.router, prefix="/autopilot", tags=["Autopilot"])
-api_router.include_router(websocket.router, tags=["WebSocket"])

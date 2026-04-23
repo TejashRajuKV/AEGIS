@@ -268,7 +268,6 @@ class DAGGNNDiscovery:
             num_nodes=n_features,
             input_dim=n_features,
             hidden_dim=self.hidden_dim,
-            latent_dim=self.latent_dim,
             num_gnn_layers=2,
             num_encoder_layers=3,
             lambda1=self.lambda1,

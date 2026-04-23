@@ -24,6 +24,11 @@ class EqualizedOdds(FairnessMetric):
     def __init__(self, threshold: float = 0.1):
         super().__init__(name="equalized_odds", threshold=threshold)
 
+    @property
+    def description(self) -> str:
+        """Max absolute difference in FPR and FNR across groups."""
+        return "Difference in FPR and FNR across groups"
+
     def _compute_group_rates(
         self, y_true: np.ndarray, y_pred: np.ndarray, mask: np.ndarray
     ) -> Dict[str, float]:

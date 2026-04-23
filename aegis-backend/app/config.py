@@ -36,19 +36,19 @@ class Settings(BaseSettings):
     # ── Project Paths ──────────────────────────────────────────────
     BASE_DIR: Path = Field(default_factory=lambda: Path(__file__).resolve().parent.parent)
     DATA_DIR: Path = Field(
-        default_factory=lambda: Path(__file__).resolve().parent.parent.parent.parent / "aegis-shared" / "datasets"
+        default_factory=lambda: Path(__file__).resolve().parent.parent.parent / "aegis-shared" / "datasets"
     )
     CHECKPOINT_DIR: Path = Field(
-        default_factory=lambda: Path(__file__).resolve().parent.parent.parent / "checkpoints"
+        default_factory=lambda: Path(__file__).resolve().parent.parent / "checkpoints"
     )
     UPLOAD_DIR: Path = Field(
-        default_factory=lambda: Path(__file__).resolve().parent.parent.parent / "uploads"
+        default_factory=lambda: Path(__file__).resolve().parent.parent / "uploads"
     )
     LOG_DIR: Path = Field(
-        default_factory=lambda: Path(__file__).resolve().parent.parent.parent / "logs"
+        default_factory=lambda: Path(__file__).resolve().parent.parent / "logs"
     )
     CACHE_DIR: Path = Field(
-        default_factory=lambda: Path(__file__).resolve().parent.parent.parent / "cache"
+        default_factory=lambda: Path(__file__).resolve().parent.parent / "cache"
     )
 
     @field_validator("BASE_DIR", "DATA_DIR", "CHECKPOINT_DIR", "UPLOAD_DIR", "LOG_DIR", "CACHE_DIR", mode="before")

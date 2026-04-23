@@ -67,7 +67,7 @@ def create_app() -> FastAPI:
     # ── CORS ───────────────────────────────────────────────────────
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=settings.CORS_ORIGINS,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -99,10 +99,15 @@ def create_app() -> FastAPI:
         return {"status": "healthy", "version": app_version}
 
     # ── API Routers ────────────────────────────────────────────────
-    # All 11 routers are aggregated via api_router (/api prefix):
+    # REST routers aggregated via api_router (/api prefix):
     #   health, datasets, models, fairness, causal, text_bias, drift,
-    #   counterfactual, code_fix, autopilot, websocket
+    #   counterfactual, code_fix, autopilot
     app.include_router(api_router)
+
+    # WebSocket router mounted at root (not under /api) so the client
+    # can connect to /ws/{session_id} directly without the /api prefix
+    from app.api.routes import websocket as ws_routes
+    app.include_router(ws_routes.router, tags=["WebSocket"])
 
     return app
 

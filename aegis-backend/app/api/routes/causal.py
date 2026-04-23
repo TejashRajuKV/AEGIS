@@ -84,7 +84,7 @@ async def discover_causal(req: CausalDiscoveryRequest):
                         for pc in proxy_dict.get("proxy_chains", [])
                     ]
         else:
-            # PC algorithm
+            # PC algorithm — accepts method values "pc" or "pc_algorithm"
             pc = PCAlgorithm(alpha=req.threshold)
             result = pc.discover(df[num_cols])
 

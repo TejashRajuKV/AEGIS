@@ -253,7 +253,7 @@ class NodeFeatureEncoder(nn.Module):
         # Restore original dimensionality
         if squeeze_all:
             out = out.squeeze(0).squeeze(0)
-        elif original_shape.dim() == 2:
+        elif len(original_shape) == 2:
             out = out.squeeze(0)
 
         return out

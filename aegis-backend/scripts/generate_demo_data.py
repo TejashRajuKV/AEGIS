@@ -1,47 +1,69 @@
 #!/usr/bin/env python3
-"""Generate demo data for AEGIS."""
+"""Download REAL datasets for AEGIS."""
 
-import numpy as np
-import pandas as pd
 import os
+import sys
+import pandas as pd
+import numpy as np
+
+# Add backend root to Python path so 'app' can be imported
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.utils.logger import get_logger
-
+from app.config import get_settings
 
 def main():
     logger = get_logger("generate_demo_data")
-    logger.info("Generating demo datasets")
+    settings = get_settings()
+    
+    # Ensure directory exists
+    os.makedirs(settings.DATA_DIR, exist_ok=True)
+    
+    logger.info(f"Saving real datasets to {settings.DATA_DIR}...")
 
-    np.random.seed(42)
-    os.makedirs("../aegis-shared/datasets", exist_ok=True)
+    # 1. Real Adult Census Data
+    logger.info("Downloading REAL Adult Census dataset from UCI...")
+    try:
+        adult_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
+        adult_cols = [
+            "age", "workclass", "fnlwgt", "education", "education_num", 
+            "marital_status", "occupation", "relationship", "race", "sex", 
+            "capital_gain", "capital_loss", "hours_per_week", "native_country", "income"
+        ]
+        # Use python engine with regex separator to clean up trailing/leading spaces
+        adult = pd.read_csv(adult_url, names=adult_cols, sep=r'\s*,\s*', engine='python')
+        
+        # Clean up the dataset (remove rows with missing '?')
+        adult = adult.replace('?', np.nan).dropna()
+        
+        adult.to_csv(settings.DATA_DIR / "adult_census.csv", index=False)
+        logger.info(f"Successfully saved real adult_census.csv: {len(adult)} rows")
+    except Exception as e:
+        logger.error(f"Failed to download Adult dataset: {e}")
 
-    # Adult Census-like data
-    n = 1000
-    adult = pd.DataFrame({
-        "age": np.random.randint(18, 70, n),
-        "workclass": np.random.choice(["Private", "Self-emp", "Gov", "Other"], n),
-        "education_num": np.random.randint(1, 16, n),
-        "sex": np.random.choice([0, 1], n),
-        "hours_per_week": np.random.randint(20, 60, n),
-        "income": (np.random.rand(n) > 0.75).astype(int),
-    })
-    adult.to_csv("../aegis-shared/datasets/adult_census.csv", index=False)
-    logger.info(f"Generated adult_census.csv: {len(adult)} rows")
+    # 2. Real COMPAS Recidivism Data
+    logger.info("Downloading REAL COMPAS dataset from ProPublica...")
+    try:
+        compas_url = "https://raw.githubusercontent.com/propublica/compas-analysis/master/compas-scores-two-years.csv"
+        compas = pd.read_csv(compas_url)
+        
+        # Keep only the most relevant columns to keep the file size manageable
+        cols_to_keep = [
+            "age", "c_charge_degree", "race", "age_cat", "score_text", 
+            "sex", "priors_count", "days_b_screening_arrest", "decile_score", 
+            "is_recid", "two_year_recid", "c_jail_in", "c_jail_out"
+        ]
+        compas = compas[[c for c in cols_to_keep if c in compas.columns]]
+        
+        # Drop rows with critical missing data
+        compas = compas.dropna(subset=['is_recid', 'race', 'sex'])
+        
+        compas.to_csv(settings.DATA_DIR / "compas_recidivism.csv", index=False)
+        logger.info(f"Successfully saved real compas_recidivism.csv: {len(compas)} rows")
+    except Exception as e:
+        logger.error(f"Failed to download COMPAS dataset: {e}")
 
-    # COMPAS-like data
-    compas = pd.DataFrame({
-        "age": np.random.randint(18, 65, n),
-        "race": np.random.choice([0, 1], n),
-        "sex": np.random.choice([0, 1], n),
-        "priors_count": np.random.randint(0, 10, n),
-        "charge_degree": np.random.choice([0, 1], n),
-        "recidivism": (np.random.rand(n) > 0.7).astype(int),
-    })
-    compas.to_csv("../aegis-shared/datasets/compas_recidivism.csv", index=False)
-    logger.info(f"Generated compas_recidivism.csv: {len(compas)} rows")
-
-    logger.info("Demo data generation complete")
-
+    logger.info("Real dataset download complete!")
 
 if __name__ == "__main__":
     main()

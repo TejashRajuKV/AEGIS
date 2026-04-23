@@ -35,7 +35,7 @@ sentence-transformers==3.3.1
 transformers==4.47.1
 
 # Drift Detection
-alibi-detect==0.14.1
+alibi-detect==0.13.0
 
 # Database & Async
 sqlalchemy==2.0.36
@@ -45,7 +45,7 @@ alembic==1.14.1
 # Utilities
 matplotlib==3.10.0
 seaborn==0.13.2
-Pillow==11.0.0
+Pillow==10.4.0
 requests==2.32.3
 aiofiles==24.1.0
 PyYAML==6.0.2

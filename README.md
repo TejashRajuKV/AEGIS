@@ -50,38 +50,52 @@ When AEGIS finds bias, it generates actual Python code to fix it. "Add these 3 l
 
 ## Quick Start
 
-### Option 1: Docker Compose (Recommended)
+The AEGIS system consists of a FastAPI backend and a Next.js React frontend. You must run both concurrently for the full experience.
+
+### 1. Running the Backend (FastAPI)
+
+**Important:** The backend highly recommends **Python 3.11** to successfully install the Machine Learning dependencies without errors.
+
+Open a terminal and run:
+
+```powershell
+cd aegis-backend
+
+# Create and activate a Python 3.11 virtual environment
+py -3.11 -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# Install all backend dependencies
+pip install -r requirements.txt
+
+# Generate the mock datasets (MUST be run before starting the server)
+python scripts/generate_demo_data.py
+
+# Run the backend server (runs on port 8000)
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+*Note: API documentation will be available at http://localhost:8000/docs.*
+
+### 2. Running the Frontend (Next.js)
+
+Open a **new, separate terminal window** and run:
+
+```powershell
+cd aegis-frontend
+
+# Install all frontend dependencies
+npm install
+
+# Start the frontend development server (runs on port 3000)
+npm run dev
+```
+*Note: The frontend will be available at http://localhost:3000. It automatically proxies `/api` requests to the backend, so the backend MUST be running first!*
+
+### Option: Docker Compose (Alternative)
 
 ```bash
 # Build and run all services
 docker-compose up --build
-
-# Backend available at http://localhost:8000
-# API docs at http://localhost:8000/docs
-```
-
-### Option 2: Direct Python
-
-```bash
-cd aegis-backend
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up datasets
-python ../aegis-dataset-setup.py
-
-# Run the server
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### Option 3: Make
-
-```bash
-make install    # Install dependencies
-make setup      # Download and prepare datasets
-make run        # Start the development server
-make test       # Run the test suite
 ```
 
 ## API Endpoints

@@ -24,6 +24,11 @@ class DemographicParity(FairnessMetric):
     def __init__(self, threshold: float = 0.1):
         super().__init__(name="demographic_parity", threshold=threshold)
 
+    @property
+    def description(self) -> str:
+        """Max absolute difference in selection rates across groups."""
+        return "Selection rate gap across groups"
+
     def compute(
         self,
         y_true: np.ndarray,

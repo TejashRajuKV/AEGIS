@@ -36,8 +36,9 @@ class FairnessAuditRequest(BaseModel):
         default_factory=lambda: ["sex", "race"],
         description="List of sensitive attribute column names"
     )
-    target_column: str = Field(default="income", description="Target variable column")
+    target_column: Optional[str] = Field(default=None, description="Target variable column (auto-detected if not provided)")
     test_size: float = Field(default=0.2, ge=0.05, le=0.5)
+    retrain: bool = Field(default=False, description="Force retrain instead of returning cached result")
 
 
 class FairnessMetricResult(BaseModel):
@@ -65,7 +66,7 @@ class FairnessAuditResponse(BaseModel):
 class CausalDiscoveryRequest(BaseModel):
     """Request for causal graph discovery."""
     dataset_name: str
-    method: str = Field(default="dag_gnn", description="dag_gnn or pc_algorithm")
+    method: str = Field(default="dag_gnn", description="dag_gnn or pc")
     threshold: float = Field(default=0.3, ge=0.0, le=1.0)
     max_epochs: int = Field(default=300, ge=10, le=10000)
 
@@ -100,15 +101,9 @@ class CausalDiscoveryResponse(BaseModel):
 
 class AutopilotStartRequest(BaseModel):
     """Request to start the RL autopilot."""
-    dataset_name: str
-    model_type: str = Field(default="logistic_regression")
-    sensitive_features: List[str] = Field(default_factory=lambda: ["sex", "race"])
-    target_column: str = Field(default="income")
-    max_iterations: int = Field(default=100, ge=1, le=1000)
-    accuracy_floor: float = Field(default=0.70, ge=0.5, le=1.0)
-    fairness_targets: Dict[str, float] = Field(
-        default_factory=lambda: {"demographic_parity_gap": 0.05, "equalized_odds_gap": 0.05}
-    )
+    dataset: str = Field(..., description="Dataset identifier")
+    model: str = Field(default="logistic_regression")
+    config: Dict[str, Any] = Field(default_factory=dict)
 
 
 class AutopilotStatusResponse(BaseModel):
@@ -126,115 +121,86 @@ class AutopilotStatusResponse(BaseModel):
 # ── Drift Detection Schemas ──────────────────────────────────────
 
 class DriftMonitorRequest(BaseModel):
-    """Request to start drift monitoring."""
-    dataset_name: str
-    feature_columns: List[str]
-    reference_start: Optional[int] = None
-    reference_end: Optional[int] = None
-    check_interval_secs: int = Field(default=60, ge=5)
-
-
-class DriftPoint(BaseModel):
-    """Single drift detection result."""
-    timestamp: str
-    cusum_statistic: float
-    wasserstein_distance: float
-    is_drift_detected: bool
-    confidence: float
-    drifted_features: List[str] = Field(default_factory=list)
+    """Request to start drift monitoring (matches drift.py route)."""
+    reference_data: List[List[float]] = Field(..., description="Reference data samples (baseline distribution).")
+    new_data: List[List[float]] = Field(..., description="New data samples to check for drift.")
+    feature_names: Optional[List[str]] = Field(None, description="Names of features for alert labelling.")
+    cusum_threshold: float = Field(default=5.0, ge=0.1)
+    wasserstein_threshold: float = Field(default=0.1, ge=0.01)
 
 
 class DriftMonitorResponse(BaseModel):
-    """Drift monitoring results."""
-    dataset_name: str
-    total_points_checked: int
-    drift_points: List[DriftPoint]
-    is_stable: bool
-    summary: Dict[str, Any] = Field(default_factory=dict)
+    """Drift monitoring submission response."""
+    task_id: str
+    status: str
+    message: str
 
 
 # ── Text Bias Schemas ─────────────────────────────────────────────
 
+class TextPairItem(BaseModel):
+    """A single text pair for bias comparison."""
+    prompt_a: str
+    prompt_b: str
+    category: str = "custom"
+
+
 class TextBiasAuditRequest(BaseModel):
-    """Request for text bias audit."""
-    text_samples: Optional[List[str]] = None
-    dataset_name: Optional[str] = None
-    demographics: List[Dict[str, str]] = Field(
-        default_factory=lambda: [
-            {"attribute": "gender", "values": ["man", "woman"]},
-            {"attribute": "race", "values": ["Black", "White", "Asian", "Hispanic"]},
-        ]
-    )
-    num_templates: int = Field(default=10, ge=1, le=100)
-
-
-class TextBiasResult(BaseModel):
-    """Text bias measurement for a single demographic pair."""
-    template: str
-    group_a: str
-    group_b: str
-    cosine_distance: float
-    bias_score: float
-    is_biased: bool
+    """Request for text bias audit (matches text_bias.py route)."""
+    text_pairs: Optional[List[TextPairItem]] = None
+    categories: Optional[List[str]] = None
+    n_pairs_per_category: int = Field(default=3, ge=1, le=20)
+    include_stereoset: bool = True
+    model_name: Optional[str] = None
+    provider: Optional[str] = None
 
 
 class TextBiasAuditResponse(BaseModel):
-    """Complete text bias audit response."""
-    total_templates_tested: int
-    biased_templates: int
-    results: List[TextBiasResult]
-    overall_bias_score: float
-    summary: str
+    """Text bias audit submission response."""
+    task_id: str
+    status: str
+    message: str
 
 
 # ── Counterfactual Schemas ────────────────────────────────────────
 
-class CounterfactualRequest(BaseModel):
-    """Request for counterfactual generation."""
-    dataset_name: str
-    instance_index: Optional[int] = None
-    instance_data: Optional[Dict[str, Any]] = None
-    sensitive_feature: str = Field(default="sex")
-    num_counterfactuals: int = Field(default=5, ge=1, le=50)
-    proximity_weight: float = Field(default=0.5, ge=0.0, le=1.0)
-    diversity_weight: float = Field(default=0.3, ge=0.0, le=1.0)
+class CounterfactualGenerateRequest(BaseModel):
+    """Request for counterfactual generation (matches counterfactual.py route)."""
+    sample: List[float] = Field(..., description="Original sample feature values.")
+    sensitive_attr: int = Field(..., ge=0, description="Index of the sensitive attribute.")
+    original_value: Any = Field(default=0)
+    target_value: Any = Field(default=1)
+    n_samples: int = Field(default=5, ge=1, le=50)
+    feature_names: Optional[List[str]] = None
 
 
-class CounterfactualResult(BaseModel):
-    """Single counterfactual instance."""
-    original: Dict[str, Any]
-    counterfactual: Dict[str, Any]
-    changed_features: List[str]
-    prediction_change: float
-    sparsity: float
+class CounterfactualInterpolateRequest(BaseModel):
+    """Request for latent space interpolation."""
+    sample_a: List[float]
+    sample_b: List[float]
+    n_steps: int = Field(default=10, ge=2, le=100)
+    feature_names: Optional[List[str]] = None
 
-
-class CounterfactualResponse(BaseModel):
-    """Counterfactual generation response."""
-    dataset_name: str
-    num_generated: int
-    counterfactuals: List[CounterfactualResult]
-    coverage: float
-    diversity_score: float
 
 
 # ── Code Fix Schemas ──────────────────────────────────────────────
 
-class CodeFixRequest(BaseModel):
-    """Request to generate bias fix code."""
-    dataset_name: str
+class CodeFixGenerateRequest(BaseModel):
+    """Request to generate bias fix code (matches code_fix.py route)."""
     bias_report: Dict[str, Any]
-    model_type: str = Field(default="logistic_regression")
-    fix_type: str = Field(default="auto", description="preprocessing, inprocessing, postprocessing, auto")
+    model_type: str = Field(default="sklearn")
+    fix_type: Optional[str] = None
 
 
-class CodeFixResponse(BaseModel):
+class CodeFixGenerateResponse(BaseModel):
     """Generated code fix response."""
-    fix_code: str
+    fix_type: str
+    code: str
     explanation: str
-    estimated_fairness_improvement: Dict[str, float]
-    estimated_accuracy_impact: float
-    applied_fixes: List[str]
+    expected_improvement: str
+    imports_needed: List[str]
+    is_valid_syntax: bool
+    syntax_error: Optional[str] = None
 
 
 # ── WebSocket Schemas ────────────────────────────────────────────

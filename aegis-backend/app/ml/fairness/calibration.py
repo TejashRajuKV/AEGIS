@@ -23,6 +23,11 @@ class CalibrationMetric(FairnessMetric):
         super().__init__(name="calibration", threshold=threshold)
         self.n_bins = n_bins
 
+    @property
+    def description(self) -> str:
+        """Difference in binned calibration error across groups."""
+        return "Binned calibration error gap across groups"
+
     def _binned_calibration(
         self, y_true: np.ndarray, y_prob: np.ndarray, n_bins: int = 10
     ) -> float:
